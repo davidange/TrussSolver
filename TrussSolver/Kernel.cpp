@@ -54,7 +54,20 @@ Eigen::VectorXd calculateThermalLoadForceVector(std::map<int, double>& mTemperat
 	return globalThermalLoadVector;
 }
 
-Eigen::VectorXd
+Eigen::VectorXd calcualtePrescribedEquivalentForceVector(std::map<int, double>& mConstraints,
+	  Eigen::MatrixXd& globalStiffnessMatrix, int numOfDOFS) {
+	Eigen::VectorXd globalPrescribedEquivalentForce = Eigen::VectorXd::Zero(numOfDOFS);
+	for (auto constraint : mConstraints) {
+		if (constraint.second != 0) {
+			Eigen::VectorXd PrescribedConstraintForce = Eigen::VectorXd::Zero(numOfDOFS);
+			for (int row = 0; row < numOfDOFS; row++) {
+				PrescribedConstraintForce(row) = constraint.second * globalStiffnessMatrix(row, constraint.first - 1);
+			}
+			globalPrescribedEquivalentForce += PrescribedConstraintForce;
+		}
+	}
+	return globalPrescribedEquivalentForce;
+};
 
 
 int main() {
@@ -146,12 +159,15 @@ int main() {
 	std::cout << "Thermal Force Vector:\n";
 	std::cout << thermalForceVector << "\n";
 	std::cout << "\n-------------------------------------------------------------------\n";
-	//add to Thermal Force Vector
-	forceVector =forceVector+thermalForceVector;
+
+	Eigen::VectorXd prescribedDisplacementLoads =
+		calcualtePrescribedEquivalentForceVector(mConstraints, globalStiffnessMatrix, mNodes.size() * 2);
+	std::cout << "Prescribed Displacement Force Vector:\n";
+	std::cout << prescribedDisplacementLoads << "\n";
 	std::cout << "\n-------------------------------------------------------------------\n";
-	//Eigen::VectorXd prescribedDisplacementLoads;
-
-
+	//add all Forces Vector
+	forceVector = forceVector + thermalForceVector+prescribedDisplacementLoads;
+	std::cout << "\n-------------------------------------------------------------------\n";
 
 	std::cout << "Total Force Vector:\n";
 	std::cout << forceVector << "\n";
