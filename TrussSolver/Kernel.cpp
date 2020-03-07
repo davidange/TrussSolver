@@ -97,10 +97,10 @@ int main() {
 
 
 	//input trusses
-	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E,  1));
+	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E,alpha,  1));
 	vTrusses.push_back(Truss(&mNodes[2], &mNodes[3], A1, E,  2));
 	vTrusses.push_back(Truss(&mNodes[3], &mNodes[4], A2, E, alpha, 3));
-	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E,  4));
+	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E,  alpha,4));
 	vTrusses.push_back(Truss(&mNodes[4], &mNodes[6], A1, E, 5));
 
 
@@ -184,13 +184,12 @@ int main() {
 			globalStiffnessMatrix(constraint.first - 1, row) = 0;
 		}
 		globalStiffnessMatrix(constraint.first - 1, constraint.first - 1)=1;
-		forceVector(constraint.first - 1) = 0;
+		forceVector(constraint.first - 1) = constraint.second;
 
 		
 	}
 
 	
-
 	std::cout << "Modified Force Vector:\n";
 	std::cout << forceVector<<"\n";
 	std::cout << "\n-------------------------------------------------------------------\n";
@@ -203,7 +202,63 @@ int main() {
 	std::cout << displacementsResult;
 
 
-	//Thermal Load Force Vector
+	//********************************************************************************************
+	//********************************************************************************************
+	//********************************************************************************************
+	// Post processing
+
+	//***********************************Internal Stresses
+	
+	//Stresses due to displacements and applied forces
+	Eigen::VectorXd stresses= Eigen::VectorXd::Zero(vTrusses.size());//Stresses of trusses 
+	Eigen::VectorXd  internalForces= Eigen::VectorXd::Zero(vTrusses.size());
+	Eigen::VectorXd ThermalStresses = Eigen::VectorXd::Zero(vTrusses.size());//Stresses of trusses 
+	Eigen::VectorXd thermalForces= Eigen::VectorXd::Zero(vTrusses.size());
+	for (int i = 0; i < vTrusses.size();i++) {
+		Truss t = vTrusses[i];
+		//calculate local displacements
+		int EFT[4];
+		EFT[0] = ((t.getNode1()->getId() - 1 )* 2);
+		EFT[1] = ((t.getNode1()->getId() - 1 )* 2+1);
+		EFT[2] = ((t.getNode2()->getId() - 1 )* 2);
+		EFT[3] = ((t.getNode2()->getId() - 1) * 2+1);
+
+		//calculate angle (in radians)
+		double angleRot = std::atan2(t.getNode1()->getY() - t.getNode2()->getY(),
+			t.getNode1()->getX() - t.getNode2()->getX());
+		double c = cos(angleRot);
+		double s = sin(angleRot);
+
+		//displacements in local coordinates
+		double uxi = c * displacementsResult[EFT[0]] + s * displacementsResult[EFT[1]];
+		double uxj = c * displacementsResult[EFT[2]] + s * displacementsResult[EFT[3]];
+
+		//Total Deformation
+		double d = uxj - uxi;
+		double p = t.getArea() * t.getE() / t.getLength() * d;
+		internalForces(i)=p;
+
+		//Stresses due to load/displacement
+		stresses(i)=(p / t.getArea());
+		//thermal Stresses
+		if (mTemperatures.count(i + 1)) {
+			ThermalStresses(i) = -1*t.getE() * t.getThermalCoefficient() * mTemperatures[i];
+			thermalForces(i) = -1 * t.getE() * t.getArea() * t.getThermalCoefficient() * mTemperatures[i];
+		}
+	}
+	Eigen::VectorXd  mechanicalStresses = ThermalStresses + stresses;
+	Eigen::VectorXd  mechanicalInternalForces = internalForces +thermalForces;
+
+	std::cout << "\n-------------------------------------------------------------------\n";
+	std::cout << "Mechanical Forces:\n"<<mechanicalInternalForces;
+	std::cout << "\n-------------------------------------------------------------------\n";
+	std::cout << "Mechanical Stresses:\n" << mechanicalStresses;
+
+	
+
+
+
+
 
 	
 
