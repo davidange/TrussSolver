@@ -77,7 +77,7 @@ int main() {
 	double E = 100;
 	double alpha = .001;
 	double P = 5;
-	double U = 0;
+	double U = 2;
 	double deltaT = 30;
 	double L = 10;
 	
@@ -97,10 +97,10 @@ int main() {
 
 
 	//input trusses
-	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E, alpha, 1));
+	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E,  1));
 	vTrusses.push_back(Truss(&mNodes[2], &mNodes[3], A1, E,  2));
 	vTrusses.push_back(Truss(&mNodes[3], &mNodes[4], A2, E, alpha, 3));
-	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E, alpha, 4));
+	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E,  4));
 	vTrusses.push_back(Truss(&mNodes[4], &mNodes[6], A1, E, 5));
 
 
@@ -166,7 +166,7 @@ int main() {
 	std::cout << prescribedDisplacementLoads << "\n";
 	std::cout << "\n-------------------------------------------------------------------\n";
 	//add all Forces Vector
-	forceVector = forceVector + thermalForceVector+prescribedDisplacementLoads;
+	forceVector = forceVector + thermalForceVector-prescribedDisplacementLoads;
 	std::cout << "\n-------------------------------------------------------------------\n";
 
 	std::cout << "Total Force Vector:\n";
