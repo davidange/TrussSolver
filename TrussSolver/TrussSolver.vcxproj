@@ -128,6 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Node.cpp" />
+    <ClCompile Include="Truss.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
