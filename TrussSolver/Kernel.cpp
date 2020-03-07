@@ -3,6 +3,7 @@
 #include<vector>
 #include <map>
 #include <Eigen/Dense>
+
 Eigen::MatrixXd calculateGlobalMatrix(std::vector<Truss>& TrussVector,int numberOfDOFs) 
 {
 	Eigen::MatrixXd globalMatrix=Eigen::MatrixXd::Zero(numberOfDOFs, numberOfDOFs);
@@ -44,16 +45,17 @@ int main() {
 	double P = 5;
 	double U = 2;
 	double deltaT = 30;
+	double L = 10;
 	
 	std::map<int, Node> mNodes;
 	std::vector<Truss> vTrusses;
 	//input Nodes
-	mNodes[1] = Node(0, 10, 1);
+	mNodes[1] = Node(0, L, 1);
 	mNodes[2] = Node(0, 0, 2);
-	mNodes[3] = Node(10, 10, 3);
-	mNodes[4] = Node(20, 10, 4);
-	mNodes[5] = Node(30, 10, 5);
-	mNodes[6] = Node(30, 0, 6);
+	mNodes[3] = Node(L, L, 3);
+	mNodes[4] = Node(2*L, L, 4);
+	mNodes[5] = Node(3*L, L, 5);
+	mNodes[6] = Node(3*L, 0, 6);
 
 
 
@@ -78,10 +80,14 @@ int main() {
 	}
 
 	//create Global Stiffness Matrix
-
-
 	Eigen::MatrixXd globalStiffnessMatrix = calculateGlobalMatrix(vTrusses, mNodes.size() * 2);
 	std::cout << globalStiffnessMatrix;
+
+
+	//reduce Matrix After applying BC
+
+
+
 
 	return 0;
 }
