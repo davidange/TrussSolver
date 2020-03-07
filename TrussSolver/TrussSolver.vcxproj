@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\david\OneDrive\TUM Clases\1st Semester\IFEM Introduction to Finite Element Method\Truss Solver\eigen-3.3.7;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,6 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\david\OneDrive\TUM Clases\1st Semester\IFEM Introduction to Finite Element Method\Truss Solver\eigen-3.3.7;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -100,6 +102,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\david\OneDrive\TUM Clases\1st Semester\IFEM Introduction to Finite Element Method\Truss Solver\eigen-3.3.7;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -115,6 +118,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\david\OneDrive\TUM Clases\1st Semester\IFEM Introduction to Finite Element Method\Truss Solver\eigen-3.3.7;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +131,7 @@
     <ClInclude Include="Truss.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Kernel.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Truss.cpp" />
   </ItemGroup>

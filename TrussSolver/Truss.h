@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
-
 #include "Node.h"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+
 class Truss {
 private:
 	Node* _node1;
@@ -27,6 +29,9 @@ public:
 	void setNode1(Node* node);
 	void setNode2(Node* node);
 	void setId(int id);
+
+	Eigen::Matrix4d getLocalMatrix();
+	Eigen::Matrix4d getGlobalMatrix();
 
 
 };

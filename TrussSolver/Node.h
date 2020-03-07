@@ -5,6 +5,7 @@ private:
 	double _x, _y;
 	int _id;
 public:
+	Node();
 	Node(double x, double y, int id);
 
 	friend std::ostream& operator << (std::ostream& os, const Node& n);

@@ -1,5 +1,6 @@
 #include "Truss.h"
 #include "math.h"
+#include <Eigen/Dense>
 
 Truss::Truss(Node* node1, Node* node2, double A, double E, int id):
 	_node1(node1),_node2(node2),_A(A),_E(E),_id(id)
@@ -62,9 +63,51 @@ void Truss::setId(int id)
 	_id = id;
 }
 
+Eigen::Matrix4d Truss::getLocalMatrix()
+{
+	//stiffness matrix of a Truss
+	Eigen::Matrix4d localMatrix(4,4);
+	localMatrix.Constant(0.0);
+	localMatrix(0, 0) = 1;
+	localMatrix(2, 0) = -1;
+	localMatrix(0, 2) = -1;
+	localMatrix(2, 2) = 1;
+	localMatrix* _A* _E / getLength();
+	return localMatrix;
+}
+
+Eigen::Matrix4d Truss::getGlobalMatrix()
+{
+	Eigen::Matrix4d R;
+
+	//calculate angle (in radians)
+	double angleRot = std::atan2(_node1->getY() - _node2->getY(),
+		_node1->getX() - _node2->getX());
+	double c = cos(angleRot);
+	double s = sin(angleRot);
+	R(0, 0) = c*c;
+	R(1, 0) = s * c;
+	R(2, 0) = -c * c;
+	R(3, 0) = -s * c;
+	R(0, 1) = s * c;
+	R(1, 1) = s * s;
+	R(2, 1) = -s * c;
+	R(3, 1) = -s * s;
+	R(0, 2) = -c * c;
+	R(1, 2) = -s * c;
+	R(2, 2) = c * c;
+	R(3, 2) = s * c;
+	R(0, 3) = -s * c;
+	R(1, 3) = -s * s;
+	R(2, 3) = s * c;
+	R(3, 3) = s * s;
+
+	return R *_A*_E/getLength();
+}
+
 std::ostream& operator<<(std::ostream& os, const Truss& truss)
 {
-	os << "Truss : " << truss._id << ": " << "From Node " << truss._node1->getId() <<
-		"to Node " << truss._node2->getId();
+	os << "Truss : " << truss._id << ": From Node " << truss._node1->getId() <<
+		" to Node " << truss._node2->getId();
 	return os;
 }

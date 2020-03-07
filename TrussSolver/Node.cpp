@@ -1,6 +1,10 @@
 #include "Node.h"
 
-Node::Node(double x, double y, int id):_x(x),_y(y),_id(id)
+Node::Node() :_x(0), _y(0), _id(0)
+{
+}
+
+Node::Node(double x=0, double y=0, int id=0):_x(x),_y(y),_id(id)
 {
 	
 }
@@ -47,4 +51,5 @@ std::istream& operator>>(std::istream& is, Node& n)
 	is >> n._y;
 	is >> n._id;
 	// TODO: insert return statement here
+	return is;
 }
