@@ -35,6 +35,27 @@ Eigen::MatrixXd calculateGlobalMatrix(std::vector<Truss>& TrussVector,int number
 	}
 	return globalMatrix;
 }
+Eigen::VectorXd calculateThermalLoadForceVector(std::map<int, double>& mTemperatures, std::vector<Truss>& vTrusses, int numOfDOFS) {
+	Eigen::VectorXd globalThermalLoadVector = Eigen::VectorXd::Zero(numOfDOFS);
+	int EFT[4];
+
+	for (auto thermalLoad : mTemperatures) {
+		Truss& truss = vTrusses[thermalLoad.first - 1];
+		EFT[0] = (truss.getNode1()->getId() - 1) * 2;
+		EFT[1] = (truss.getNode1()->getId() - 1) * 2 + 1;
+		EFT[2] = (truss.getNode2()->getId() - 1) * 2;
+		EFT[3] = (truss.getNode2()->getId() - 1) * 2 + 1;
+		Eigen::Vector4d thermalLoadVector = truss.getGlobalThermalVectorLoad()*thermalLoad.second;
+		for (int row = 0; row < 4; row++) {
+			globalThermalLoadVector(EFT[row]) += thermalLoadVector(row);
+		}
+
+	}
+	return globalThermalLoadVector;
+}
+
+Eigen::VectorXd
+
 
 int main() {
 	//input Trusses
@@ -43,12 +64,15 @@ int main() {
 	double E = 100;
 	double alpha = .001;
 	double P = 5;
-	double U = 2;
+	double U = 0;
 	double deltaT = 30;
 	double L = 10;
 	
 	std::map<int, Node> mNodes;
 	std::vector<Truss> vTrusses;
+	std::map<int, double>mConstraints;
+	std::map<int, double>mLoads;
+	std::map<int, double>mTemperatures;
 	//input Nodes
 	mNodes[1] = Node(0, L, 1);
 	mNodes[2] = Node(0, 0, 2);
@@ -60,11 +84,35 @@ int main() {
 
 
 	//input trusses
-	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E, 1));
-	vTrusses.push_back(Truss(&mNodes[2], &mNodes[3], A1, E, 2));
-	vTrusses.push_back(Truss(&mNodes[3], &mNodes[4], A2, E, 3));
-	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E, 4));
+	vTrusses.push_back(Truss(&mNodes[1] , &mNodes[3], A2, E, alpha, 1));
+	vTrusses.push_back(Truss(&mNodes[2], &mNodes[3], A1, E,  2));
+	vTrusses.push_back(Truss(&mNodes[3], &mNodes[4], A2, E, alpha, 3));
+	vTrusses.push_back(Truss(&mNodes[4], &mNodes[5], A2, E, alpha, 4));
 	vTrusses.push_back(Truss(&mNodes[4], &mNodes[6], A1, E, 5));
+
+
+	//input Constraints
+	mConstraints[1] = 0;
+	mConstraints[2] = 0;
+	mConstraints[3] = 0;
+	mConstraints[4] = 0;
+	mConstraints[9] = 0;
+	mConstraints[10] = 0;
+	mConstraints[11] = 0;
+	mConstraints[12] = -1*U;
+
+	//input Loads
+	mLoads[6] = -P;
+	mLoads[8] = -P;
+
+	//Thermal delta Temperature at Element i
+	mTemperatures[1] = deltaT;
+	mTemperatures[3] = deltaT;
+	mTemperatures[4] = deltaT;
+	
+	
+
+
 
 
 	//print list of Nodes
@@ -82,12 +130,66 @@ int main() {
 	//create Global Stiffness Matrix
 	Eigen::MatrixXd globalStiffnessMatrix = calculateGlobalMatrix(vTrusses, mNodes.size() * 2);
 	std::cout << globalStiffnessMatrix;
+	std::cout << "\n-------------------------------------------------------------------\n";
 
 
+	//calculate Force Vector
+	Eigen::VectorXd forceVector = Eigen::VectorXd::Zero(mNodes.size() * 2);
+	for (auto load : mLoads) {
+		forceVector[load.first - 1] = load.second;
+	}
+	std::cout << "Force Vector:\n";
+	std::cout << forceVector << "\n";
+	std::cout << "\n-------------------------------------------------------------------\n";
+	//Calculate Thermal Force Vector
+	Eigen::VectorXd thermalForceVector = calculateThermalLoadForceVector(mTemperatures, vTrusses, mNodes.size() * 2);
+	std::cout << "Thermal Force Vector:\n";
+	std::cout << thermalForceVector << "\n";
+	std::cout << "\n-------------------------------------------------------------------\n";
+	//add to Thermal Force Vector
+	forceVector =forceVector+thermalForceVector;
+	std::cout << "\n-------------------------------------------------------------------\n";
+	//Eigen::VectorXd prescribedDisplacementLoads;
+
+
+
+	std::cout << "Total Force Vector:\n";
+	std::cout << forceVector << "\n";
+	std::cout << "\n-------------------------------------------------------------------\n";
+
+	/// IMPORTANT SHIT HERE
 	//reduce Matrix After applying BC
+	// By making rows & Columns 0s at index of the constraint
+	// make 1 equal to where the row=column=DOF of constraint
+	// Reduce the force Vector to 0 where the Boundary Conditions are applied.
+	for (auto constraint : mConstraints) {
+		for (int row = 0; row < mNodes.size()*2; row++) {
+			globalStiffnessMatrix(row, constraint.first - 1) = 0;
+			globalStiffnessMatrix(constraint.first - 1, row) = 0;
+		}
+		globalStiffnessMatrix(constraint.first - 1, constraint.first - 1)=1;
+		forceVector(constraint.first - 1) = 0;
+
+		
+	}
+
+	
+
+	std::cout << "Modified Force Vector:\n";
+	std::cout << forceVector<<"\n";
+	std::cout << "\n-------------------------------------------------------------------\n";
+	std::cout << "Reduced Stiffness Matrix:\n";
+	std::cout << globalStiffnessMatrix;
+
+	Eigen::VectorXd displacementsResult= globalStiffnessMatrix.inverse() * forceVector;
+	std::cout << "\n-------------------------------------------------------------------\n";
+	std::cout << "Displacement Vector Resultant:\n";
+	std::cout << displacementsResult;
 
 
+	//Thermal Load Force Vector
 
+	
 
 	return 0;
 }

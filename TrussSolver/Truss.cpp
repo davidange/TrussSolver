@@ -3,7 +3,12 @@
 #include <Eigen/Dense>
 
 Truss::Truss(Node* node1, Node* node2, double A, double E, int id):
-	_node1(node1),_node2(node2),_A(A),_E(E),_id(id)
+	_node1(node1),_node2(node2),_A(A),_E(E),_id(id),_thermalCoefficient(0)
+{
+}
+
+Truss::Truss(Node* node1, Node* node2, double A, double E, double thermalCoefficient, int id):
+	_node1(node1), _node2(node2), _A(A), _E(E), _id(id), _thermalCoefficient(thermalCoefficient)
 {
 }
 
@@ -38,6 +43,11 @@ double Truss::getLength()
 		std::pow((_node1->getY() - _node2->getY()), 2));;
 }
 
+double Truss::getThermalCoefficient()
+{
+	return _thermalCoefficient;
+}
+
 void Truss::setArea(double A)
 {
 	_A = A;
@@ -61,6 +71,11 @@ void Truss::setNode2(Node* node)
 void Truss::setId(int id)
 {
 	_id = id;
+}
+
+void Truss::setThermalCoefficient(double ThermalCoefficient)
+{
+	_thermalCoefficient = ThermalCoefficient;
 }
 
 Eigen::Matrix4d Truss::getLocalMatrix()
@@ -104,6 +119,34 @@ Eigen::Matrix4d Truss::getGlobalMatrix()
 
 	return R *_A*_E/getLength();
 }
+
+Eigen::Vector4d Truss::getLocalThermalVectorLoad()
+{
+	Eigen::Vector4d tLoad =Eigen::Vector4d::Zero();
+	tLoad(0) = _E * _A * _thermalCoefficient;
+	tLoad(2) =-1* _E * _A * _thermalCoefficient;
+	return tLoad;
+}
+
+Eigen::Vector4d Truss::getGlobalThermalVectorLoad()
+{
+	Eigen::Vector4d tLoad = Eigen::Vector4d::Zero();
+	//calculate angle (in radians)
+	double angleRot = std::atan2(_node1->getY() - _node2->getY(),
+		_node1->getX() - _node2->getX());
+	double c = cos(angleRot);
+	double s = sin(angleRot);
+
+	tLoad(0) = _E * _A * _thermalCoefficient*c;
+	tLoad(1) = _E * _A * _thermalCoefficient * s;
+	tLoad(2) = -1*_E * _A * _thermalCoefficient * c;
+	tLoad(3) = -1*_E * _A * _thermalCoefficient * s;
+	
+	return tLoad;
+
+}
+
+
 
 std::ostream& operator<<(std::ostream& os, const Truss& truss)
 {
