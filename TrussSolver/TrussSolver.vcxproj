@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Node.h" />
+    <ClInclude Include="Truss.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Node.cpp" />
